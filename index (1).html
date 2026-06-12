@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Thierry Transport - VTC Cote d'Ivoire</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background:#0f1115; color:#fff; overflow-x:hidden; }
+  #app { max-width:480px; margin:0 auto; min-height:100vh; background:#13161c; position:relative; padding-bottom:75px; }
+
+  .header { background:linear-gradient(135deg,#FFD100,#FFB800); padding:18px 16px; color:#111; position:sticky; top:0; z-index:50; box-shadow:0 2px 10px rgba(0,0,0,.3); }
+  .header h1 { font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .header .sub { font-size:12px; opacity:.75; margin-top:2px; }
+
+  .screen { display:none; padding:16px; }
+  .screen.active { display:block; }
+
+  .card { background:#1c2028; border-radius:14px; padding:16px; margin-bottom:14px; border:1px solid #2a2f3a; }
+  .card h3 { font-size:15px; margin-bottom:10px; color:#FFD100; }
+
+  .btn { display:block; width:100%; padding:14px; border:none; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; text-align:center; transition:.2s; }
+  .btn-primary { background:#FFD100; color:#111; }
+  .btn-primary:active { transform:scale(.97); }
+  .btn-dark { background:#2a2f3a; color:#fff; }
+  .btn-danger { background:#e74c3c; color:#fff; }
+  .btn-green { background:#2ecc71; color:#111; }
+  .btn-outline { background:transparent; border:2px solid #FFD100; color:#FFD100; }
+  .btn-sm { padding:8px 12px; font-size:12px; border-radius:8px; width:auto; display:inline-block; margin:3px 3px 0 0; }
+
+  .input, select, textarea { width:100%; padding:12px; border-radius:10px; border:1px solid #333; background:#0f1115; color:#fff; font-size:14px; margin-bottom:10px; }
+  label { font-size:12px; color:#aaa; display:block; margin-bottom:4px; }
+
+  .bottomnav { position:fixed; bottom:0; left:0; right:0; max-width:480px; margin:0 auto; background:#1c2028; display:flex; border-top:1px solid #2a2f3a; z-index:100; }
+  .navitem { flex:1; text-align:center; padding:10px 4px; color:#888; font-size:11px; cursor:pointer; }
+  .navitem.active { color:#FFD100; }
+  .navitem .icon { font-size:20px; display:block; margin-bottom:2px; }
+
+  .map { height:200px; background:linear-gradient(135deg,#1a2332,#243044); border-radius:14px; position:relative; overflow:hidden; margin-bottom:14px; display:flex; align-items:center; justify-content:center; }
+  .map::before { content:""; position:absolute; inset:0; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.03) 0 2px, transparent 2px 30px), repeating-linear-gradient(-45deg, rgba(255,255,255,.03) 0 2px, transparent 2px 30px); }
+  .map-pin { font-size:34px; z-index:2; }
+
+  .ride-option { display:flex; align-items:center; justify-content:space-between; background:#0f1115; border:2px solid #2a2f3a; border-radius:12px; padding:12px; margin-bottom:10px; cursor:pointer; }
+  .ride-option.selected { border-color:#FFD100; background:#1f1c10; }
+  .ride-option.disabled { opacity:.4; pointer-events:none; }
+  .ride-option .left { display:flex; align-items:center; gap:10px; }
+  .ride-option .veh-icon { font-size:28px; }
+  .ride-option .name { font-weight:700; font-size:14px; }
+  .ride-option .desc { font-size:11px; color:#888; }
+  .ride-option .price { font-weight:800; color:#FFD100; font-size:15px; }
+
+  .driver-card { display:flex; align-items:center; gap:12px; padding:12px; background:#0f1115; border-radius:12px; margin-bottom:10px; }
+  .avatar { width:46px; height:46px; border-radius:50%; background:#2a2f3a; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+
+  .veh-item { display:flex; flex-wrap:wrap; align-items:flex-start; gap:10px; background:#0f1115; border-radius:12px; padding:12px; margin-bottom:10px; border:1px solid #2a2f3a; }
+  .veh-item.offline { opacity:.55; }
+  .badge { font-size:10px; padding:3px 8px; border-radius:6px; font-weight:700; }
+  .badge-on { background:#2ecc71; color:#111; }
+  .badge-off { background:#555; color:#ddd; }
+
+  .toast { position:fixed; top:14px; left:50%; transform:translateX(-50%); background:#2ecc71; color:#111; padding:10px 18px; border-radius:30px; font-size:13px; font-weight:700; z-index:999; box-shadow:0 4px 14px rgba(0,0,0,.4); display:none; max-width:90%; text-align:center; }
+
+  .stars { color:#FFD100; font-size:18px; letter-spacing:2px; cursor:pointer; }
+
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:200; }
+  .modal-overlay.active { display:flex; }
+  .modal-box { background:#1c2028; border-radius:16px; padding:20px; width:88%; max-width:380px; max-height:85vh; overflow-y:auto; }
+
+  .tabs { display:flex; gap:8px; margin-bottom:14px; }
+  .tab { flex:1; text-align:center; padding:10px; border-radius:10px; background:#1c2028; font-size:13px; font-weight:700; cursor:pointer; border:1px solid #2a2f3a; }
+  .tab.active { background:#FFD100; color:#111; border-color:#FFD100; }
+
+  .row-between { display:flex; justify-content:space-between; align-items:center; }
+  .small { font-size:12px; color:#999; }
+  .price-big { font-size:32px; font-weight:900; color:#FFD100; text-align:center; margin:10px 0; }
+
+  .promo-banner { background:linear-gradient(135deg,#2ecc71,#27ae60); border-radius:12px; padding:12px; margin-bottom:14px; font-size:13px; font-weight:700; color:#062b13; }
+
+  .logo-circle { width:36px; height:36px; border-radius:50%; background:#111; color:#FFD100; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px; flex-shrink:0; }
+
+  .empty { text-align:center; padding:30px 10px; color:#666; font-size:13px; }
+
+  /* CHAT IA AYA */
+  .chat-fab { position:fixed; bottom:85px; right:16px; max-width:480px; width:54px; height:54px; border-radius:50%; background:#FFD100; color:#111; display:flex; align-items:center; justify-content:center; font-size:26px; box-shadow:0 4px 14px rgba(0,0,0,.5); cursor:pointer; z-index:150; border:none; }
+  .chat-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:flex-end; justify-content:center; z-index:300; }
+  .chat-overlay.active { display:flex; }
+  .chat-box { background:#1c2028; width:100%; max-width:480px; height:78vh; border-radius:20px 20px 0 0; display:flex; flex-direction:column; }
+  .chat-head { background:linear-gradient(135deg,#FFD100,#FFB800); color:#111; padding:14px 16px; border-radius:20px 20px 0 0; display:flex; justify-content:space-between; align-items:center; }
+  .chat-head b { font-size:15px; }
+  .chat-close { background:none; border:none; font-size:20px; color:#111; cursor:pointer; font-weight:700; }
+  .chat-msgs { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .msg { max-width:80%; padding:10px 12px; border-radius:14px; font-size:13px; line-height:1.4; }
+  .msg.bot { background:#0f1115; align-self:flex-start; border:1px solid #2a2f3a; }
+  .msg.user { background:#FFD100; color:#111; align-self:flex-end; font-weight:600; }
+  .chat-input-bar { display:flex; gap:8px; padding:10px; border-top:1px solid #2a2f3a; }
+  .chat-input-bar input { flex:1; margin:0; }
+  .chat-input-bar button { width:auto; padding:12px 16px; margin:0; }
+  .chat-typing { font-size:12px; color:#888; padding-left:6px; }
+  .suggest-row { display:flex; gap:6px; flex-wrap:wrap; padding:0 14px 8px; }
+  .suggest-chip { background:#0f1115; border:1px solid #2a2f3a; border-radius:20px; padding:6px 12px; font-size:11px; color:#FFD100; cursor:pointer; }
+
+  ::-webkit-scrollbar { width:0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="header">
+    <h1><span class="logo-circle">TT</span> Thierry Transport</h1>
+    <div class="sub" id="headerSub">VTC et Livraison - Abidjan, Cote d'Ivoire</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ACCUEIL -->
+  <div class="screen active" id="screen-home">
+    <div class="promo-banner" id="promoBanner">Promo: -15% sur votre 1ere course avec le code THIERRY15</div>
+
+    <div class="map"><div class="map-pin">📍</div></div>
+
+    <div class="card">
+      <h3>Ou allez-vous ?</h3>
+      <label>Point de depart</label>
+      <input class="input" id="pickup" placeholder="Ex: Cocody, Riviera Faya" value="Ma position actuelle">
+      <label>Destination</label>
+      <input class="input" id="destination" placeholder="Ex: Plateau, Rue du Commerce">
+      <button class="btn btn-primary" id="btnSearchRide">Rechercher une course</button>
+    </div>
+
+    <div class="card">
+      <h3>Trajets recents</h3>
+      <div class="small" id="recentList">Aucun trajet recent.</div>
+    </div>
+  </div>
+
+  <!-- CHOIX VEHICULE -->
+  <div class="screen" id="screen-rides">
+    <h3 style="margin-bottom:10px;">Choisissez votre course</h3>
+    <div class="small" style="margin-bottom:12px;" id="rideRouteInfo"></div>
+    <div id="rideOptions"></div>
+    <div class="card">
+      <h3>Mode de paiement</h3>
+      <select id="paymentMethod">
+        <option value="cash">Especes</option>
+        <option value="om">Orange Money</option>
+        <option value="momo">MTN Mobile Money</option>
+        <option value="wave">Wave</option>
+        <option value="moov">Moov Money</option>
+      </select>
+    </div>
+    <div class="card">
+      <label>Code promo</label>
+      <input class="input" id="promoCode" placeholder="Entrez un code promo (optionnel)">
+    </div>
+    <button class="btn btn-primary" id="btnConfirmRide">Confirmer la course</button>
+    <button class="btn btn-dark" style="margin-top:10px;" id="btnCancelRideScreen">Annuler</button>
+  </div>
+
+  <!-- RECHERCHE -->
+  <div class="screen" id="screen-searching">
+    <div class="card" style="text-align:center; padding:40px 16px;">
+      <div style="font-size:50px; margin-bottom:14px;">🚖</div>
+      <h3>Recherche d'un chauffeur...</h3>
+      <p class="small" style="margin-top:8px;">Merci de patienter, nous connectons votre demande aux chauffeurs Thierry Transport les plus proches.</p>
+      <button class="btn btn-danger" style="margin-top:20px;" id="btnCancelSearch">Annuler la demande</button>
+    </div>
+  </div>
+
+  <!-- COURSE EN COURS -->
+  <div class="screen" id="screen-ontrip">
+    <div class="map"><div class="map-pin">🚘</div></div>
+    <div class="card">
+      <div class="row-between">
+        <h3 style="margin:0;">Suivi de course</h3>
+        <span class="badge badge-on" id="tripStatusBadge">EN ROUTE</span>
+      </div>
+      <div class="driver-card" style="margin-top:12px;">
+        <div class="avatar">👤</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;" id="tripDriverName"></div>
+          <div class="small" id="tripVehicleInfo"></div>
+          <div class="stars" id="tripDriverStars"></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:800; color:#FFD100;" id="tripDriverPlate"></div>
+          <div class="small">Plaque</div>
+        </div>
+      </div>
+      <div class="row-between" style="margin-top:10px;">
+        <a id="callDriverBtn" class="btn btn-dark btn-sm" href="#">📞 Appeler</a>
+        <a id="whatsDriverBtn" class="btn btn-green btn-sm" href="#" target="_blank">💬 WhatsApp</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row-between">
+        <span class="small">Depart</span>
+        <span class="small" id="tripPickup"></span>
+      </div>
+      <div class="row-between" style="margin-top:6px;">
+        <span class="small">Destination</span>
+        <span class="small" id="tripDest"></span>
+      </div>
+      <div class="row-between" style="margin-top:6px;">
+        <span class="small">Prix estime</span>
+        <span style="font-weight:800; color:#FFD100;" id="tripPrice"></span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnAdvance">Le chauffeur est arrive</button>
+    <button class="btn btn-danger" style="margin-top:10px;" id="btnCancelTrip">Annuler la course</button>
+  </div>
+
+  <!-- NOTATION -->
+  <div class="screen" id="screen-rating">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:50px;">🎉</div>
+      <h3>Course terminee !</h3>
+      <div class="price-big" id="finalPrice"></div>
+      <p class="small">Notez votre chauffeur</p>
+      <div class="stars" id="ratingStars" style="font-size:32px; margin:14px 0;">
+        <span data-v="1">☆</span><span data-v="2">☆</span><span data-v="3">☆</span><span data-v="4">☆</span><span data-v="5">☆</span>
+      </div>
+      <textarea id="ratingComment" rows="2" placeholder="Laisser un commentaire (optionnel)"></textarea>
+      <button class="btn btn-primary" id="btnSubmitRating">Envoyer et terminer</button>
+    </div>
+  </div>
+
+  <!-- HISTORIQUE -->
+  <div class="screen" id="screen-history">
+    <h3 style="margin-bottom:12px;">Historique des courses</h3>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- PROFIL -->
+  <div class="screen" id="screen-profile">
+    <div class="card" style="text-align:center;">
+      <div class="avatar" style="width:70px;height:70px;font-size:34px;margin:0 auto 10px;">👤</div>
+      <h3 id="profileName">Client Thierry Transport</h3>
+      <div class="small">+225 00 00 00 00 00</div>
+    </div>
+    <div class="card">
+      <h3>Total courses</h3>
+      <div class="price-big" id="totalRides">0</div>
+    </div>
+    <div class="card">
+      <h3>Reglages</h3>
+      <button class="btn btn-dark" style="margin-bottom:10px;" id="btnToggleMode">Passer en mode <span id="modeLabel">Chauffeur / Flotte</span></button>
+      <button class="btn btn-outline" id="btnSupport">Contacter le support (WhatsApp)</button>
+    </div>
+    <div class="card">
+      <h3>A propos</h3>
+      <p class="small">Thierry Transport est un service de transport (VTC) et de livraison operant a Abidjan et dans toute la Cote d'Ivoire. Paiement Mobile Money, support WhatsApp et assistant IA Aya pour vous aider 24/7.</p>
+    </div>
+  </div>
+
+  <!-- FLOTTE -->
+  <div class="screen" id="screen-fleet">
+    <div class="tabs">
+      <div class="tab active" id="tabVehicles">Vehicules</div>
+      <div class="tab" id="tabOrders">Demandes</div>
+      <div class="tab" id="tabStats">Statistiques</div>
+    </div>
+
+    <div id="fleetVehicles">
+      <button class="btn btn-primary" style="margin-bottom:12px;" id="btnAddVehicle">+ Ajouter un vehicule</button>
+      <div id="vehicleList"></div>
+    </div>
+
+    <div id="fleetOrders" style="display:none;">
+      <div id="ordersList"></div>
+    </div>
+
+    <div id="fleetStats" style="display:none;">
+      <div class="card">
+        <h3>Vue d'ensemble</h3>
+        <div class="row-between"><span class="small">Vehicules actifs</span><b id="statActive">0</b></div>
+        <div class="row-between" style="margin-top:6px;"><span class="small">Vehicules au garage</span><b id="statOffline">0</b></div>
+        <div class="row-between" style="margin-top:6px;"><span class="small">Courses totales</span><b id="statRides">0</b></div>
+        <div class="row-between" style="margin-top:6px;"><span class="small">Revenu total estime</span><b id="statRevenue" style="color:#FFD100;">0 FCFA</b></div>
+      </div>
+      <div class="card">
+        <h3>Tarification (FCFA/km)</h3>
+        <div id="priceSettings"></div>
+        <button class="btn btn-dark" style="margin-top:8px;" id="btnSavePrices">Enregistrer les tarifs</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottomnav" id="bottomNav"></div>
+</div>
+
+<!-- BOUTON IA -->
+<button class="chat-fab" id="chatFab">🤖</button>
+
+<!-- CHAT IA AYA -->
+<div class="chat-overlay" id="chatOverlay">
+  <div class="chat-box">
+    <div class="chat-head">
+      <b>🤖 Aya - Assistant Thierry Transport</b>
+      <button class="chat-close" id="chatClose">✕</button>
+    </div>
+    <div class="chat-msgs" id="chatMsgs"></div>
+    <div class="chat-typing" id="chatTyping" style="display:none;">Aya ecrit...</div>
+    <div class="suggest-row" id="chatSuggestions"></div>
+    <div class="chat-input-bar">
+      <input class="input" id="chatInput" placeholder="Ecrivez votre message...">
+      <button class="btn btn-primary" id="chatSend">Envoyer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VEHICULE -->
+<div class="modal-overlay" id="vehicleModal">
+  <div class="modal-box">
+    <h3 style="color:#FFD100; margin-bottom:12px;">Ajouter / Modifier un vehicule</h3>
+    <input type="hidden" id="vehEditId">
+    <label>Type de vehicule</label>
+    <select id="vehType">
+      <option value="moto">Moto (rapide, economique)</option>
+      <option value="eco">Eco (voiture standard)</option>
+      <option value="confort">Confort (voiture climatisee+)</option>
+      <option value="van">Van / Minibus</option>
+      <option value="livraison">Livraison / Cargo</option>
+    </select>
+    <label>Marque et modele</label>
+    <input class="input" id="vehModel" placeholder="Ex: Toyota Corolla 2018">
+    <label>Plaque d'immatriculation</label>
+    <input class="input" id="vehPlate" placeholder="Ex: 1234 AB 01">
+    <label>Couleur</label>
+    <input class="input" id="vehColor" placeholder="Ex: Gris">
+    <label>Nom du chauffeur</label>
+    <input class="input" id="vehDriver" placeholder="Ex: Yao Kouassi">
+    <label>Telephone du chauffeur (WhatsApp)</label>
+    <input class="input" id="vehPhone" placeholder="Ex: 0700000000">
+    <label>Statut</label>
+    <select id="vehStatus">
+      <option value="online">En ligne (disponible)</option>
+      <option value="offline">Hors ligne</option>
+    </select>
+    <button class="btn btn-primary" id="btnSaveVehicle">Enregistrer</button>
+    <button class="btn btn-dark" style="margin-top:8px;" id="btnCloseVehicleModal">Annuler</button>
+  </div>
+</div>
+
+<script>
+(function(){
+
+// ---------- STORAGE ----------
+function load(key, def){
+  try{
+    var v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : def;
+  }catch(e){ return def; }
+}
+function save(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+}
+
+// ---------- ETAT ----------
+var STATE = {
+  mode: load('tt_mode', 'client'),
+  vehicles: load('tt_vehicles', []),
+  history: load('tt_history', []),
+  currentRide: load('tt_currentRide', null),
+  selectedType: null,
+  selectedPrice: null,
+  ratingValue: 0,
+  prices: load('tt_prices', { moto:150, eco:300, confort:450, van:600, livraison:350 })
+};
+
+if(STATE.vehicles.length === 0){
+  STATE.vehicles = [
+    {id:1, type:'eco', model:'Toyota Yaris 2017', plate:'1122 CI 01', color:'Blanc', driver:'Yao Kouassi', phone:'+2250700000001', status:'online', rating:4.8, rides:128},
+    {id:2, type:'moto', model:'Moto Sanya 125', plate:'MO 4455 AB', color:'Rouge', driver:'Issa Traore', phone:'+2250700000002', status:'online', rating:4.6, rides:212},
+    {id:3, type:'confort', model:'Hyundai Elantra 2020', plate:'3344 CI 02', color:'Noir', driver:'Marie Adjo', phone:'+2250700000003', status:'offline', rating:4.9, rides:64}
+  ];
+  save('tt_vehicles', STATE.vehicles);
+}
+
+var VEHICLE_LABELS = {
+  moto: {name:'Moto', icon:'🏍️', desc:'Rapide et economique'},
+  eco: {name:'Eco', icon:'🚗', desc:'Voiture standard'},
+  confort: {name:'Confort', icon:'🚙', desc:'Voiture climatisee'},
+  van: {name:'Van/Minibus', icon:'🚐', desc:"Jusqu'a 7 places"},
+  livraison: {name:'Livraison', icon:'📦', desc:'Colis et courses'}
+};
+
+// ---------- NAVIGATION ----------
+var NAV_CLIENT = [
+  {id:'screen-home', icon:'🏠', label:'Accueil'},
+  {id:'screen-history', icon:'📜', label:'Courses'},
+  {id:'screen-profile', icon:'👤', label:'Profil'}
+];
+var NAV_FLEET = [
+  {id:'screen-home', icon:'🏠', label:'Accueil'},
+  {id:'screen-fleet', icon:'🚗', label:'Ma flotte'},
+  {id:'screen-history', icon:'📜', label:'Courses'},
+  {id:'screen-profile', icon:'👤', label:'Profil'}
+];
+
+function renderNav(){
+  var navs = STATE.mode === 'fleet' ? NAV_FLEET : NAV_CLIENT;
+  var bar = document.getElementById('bottomNav');
+  bar.innerHTML = '';
+  for(var i=0;i<navs.length;i++){
+    var n = navs[i];
+    var div = document.createElement('div');
+    div.className = 'navitem';
+    div.setAttribute('data-screen', n.id);
+    div.innerHTML = '<span class="icon">'+n.icon+'</span>'+n.label;
+    div.addEventListener('click', (function(id){ return function(){ showScreen(id); }; })(n.id));
+    bar.appendChild(div);
+  }
+  updateActiveNav(getActiveScreen());
+}
+
+function getActiveScreen(){
+  var screens = document.querySelectorAll('.screen.active');
+  return screens.length ? screens[0].id : 'screen-home';
+}
+
+function updateActiveNav(screenId){
+  var items = document.querySelectorAll('.navitem');
+  for(var i=0;i<items.length;i++){
+    if(items[i].getAttribute('data-screen') === screenId){
+      items[i].classList.add('active');
+    } else {
+      items[i].classList.remove('active');
+    }
+  }
+}
+
+function showScreen(id){
+  var screens = document.querySelectorAll('.screen');
+  for(var i=0;i<screens.length;i++){ screens[i].classList.remove('active'); }
+  document.getElementById(id).classList.add('active');
+  updateActiveNav(id);
+  if(id === 'screen-history') renderHistory();
+  if(id === 'screen-profile') renderProfile();
+  if(id === 'screen-fleet') { renderVehicleList(); renderStats(); renderPriceSettings(); }
+  window.scrollTo(0,0);
+}
+
+function goHome(){ showScreen('screen-home'); }
+
+// ---------- TOAST ----------
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 2200);
+}
+
+// ---------- RECHERCHE COURSE ----------
+function searchRides(){
+  var pickup = document.getElementById('pickup').value.trim();
+  var dest = document.getElementById('destination').value.trim();
+  if(!dest){ toast('Veuillez indiquer une destination'); return; }
+
+  var distance = Math.round((2 + Math.random()*13) * 10) / 10;
+  STATE.tempRide = { pickup: pickup || 'Position actuelle', destination: dest, distance: distance };
+
+  document.getElementById('rideRouteInfo').innerHTML = '<b>'+escapeHtml(STATE.tempRide.pickup)+'</b> &rarr; <b>'+escapeHtml(dest)+'</b><br>Distance estimee: '+distance+' km';
+  renderRideOptions();
+  showScreen('screen-rides');
+}
+
+function escapeHtml(s){
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function renderRideOptions(){
+  var container = document.getElementById('rideOptions');
+  container.innerHTML = '';
+  var dist = STATE.tempRide.distance;
+  var available = STATE.vehicles.filter(function(v){ return v.status === 'online'; });
+  var types = ['moto','eco','confort','van','livraison'];
+
+  for(var i=0;i<types.length;i++){
+    var type = types[i];
+    var has = available.some(function(v){ return v.type === type; });
+    var label = VEHICLE_LABELS[type];
+    var basePrice = STATE.prices[type] || 300;
+    var price = Math.round((basePrice * dist + 200) / 50) * 50;
+    var minutes = Math.round(3 + dist * 1.8);
+
+    var div = document.createElement('div');
+    div.className = 'ride-option' + (has ? '' : ' disabled');
+    div.id = 'ride-' + type;
+    div.innerHTML = '<div class="left">'+
+                '<div class="veh-icon">'+label.icon+'</div>'+
+                '<div>'+
+                  '<div class="name">'+label.name+'</div>'+
+                  '<div class="desc">'+label.desc+' - ~'+minutes+' min'+(has?'':' - Indisponible')+'</div>'+
+                '</div>'+
+              '</div>'+
+              '<div class="price">'+price.toLocaleString()+' FCFA</div>';
+
+    if(has){
+      div.addEventListener('click', (function(t, p){ return function(){ selectRideType(t, p); }; })(type, price));
+    }
+    container.appendChild(div);
+  }
+  STATE.selectedType = null;
+  STATE.selectedPrice = null;
+}
+
+function selectRideType(type, price){
+  var all = document.querySelectorAll('.ride-option');
+  for(var i=0;i<all.length;i++){ all[i].classList.remove('selected'); }
+  var opt = document.getElementById('ride-'+type);
+  opt.classList.add('selected');
+  STATE.selectedType = type;
+  STATE.selectedPrice = price;
+}
+
+function confirmRide(){
+  if(!STATE.selectedType){ toast('Veuillez choisir un type de vehicule'); return; }
+
+  var promo = document.getElementById('promoCode').value.trim().toUpperCase();
+  var price = STATE.selectedPrice;
+  if(promo === 'THIERRY15'){
+    price = Math.round(price * 0.85 / 50) * 50;
+    toast('Code promo applique: -15%');
+  }
+
+  var candidates = STATE.vehicles.filter(function(v){ return v.status === 'online' && v.type === STATE.selectedType; });
+  if(candidates.length === 0){ toast('Aucun chauffeur disponible pour ce type'); return; }
+  var driver = candidates[Math.floor(Math.random()*candidates.length)];
+
+  STATE.currentRide = {
+    id: Date.now(),
+    pickup: STATE.tempRide.pickup,
+    destination: STATE.tempRide.destination,
+    distance: STATE.tempRide.distance,
+    type: STATE.selectedType,
+    price: price,
+    payment: document.getElementById('paymentMethod').value,
+    driver: driver,
+    status: 'searching',
+    date: new Date().toISOString()
+  };
+  save('tt_currentRide', STATE.currentRide);
+  showScreen('screen-searching');
+
+  setTimeout(function(){
+    if(!STATE.currentRide) return;
+    STATE.currentRide.status = 'enroute';
+    save('tt_currentRide', STATE.currentRide);
+    startTrip();
+  }, 2200);
+}
+
+function cancelSearch(){
+  STATE.currentRide = null;
+  save('tt_currentRide', null);
+  goHome();
+  toast('Demande annulee');
+}
+
+// ---------- COURSE EN COURS ----------
+function startTrip(){
+  var r = STATE.currentRide;
+  var d = r.driver;
+
+  document.getElementById('tripDriverName').textContent = d.driver;
+  document.getElementById('tripVehicleInfo').textContent = d.model + ' - ' + d.color;
+  document.getElementById('tripDriverPlate').textContent = d.plate;
+  document.getElementById('tripDriverStars').innerHTML = starsHTML(d.rating);
+  document.getElementById('tripPickup').textContent = r.pickup;
+  document.getElementById('tripDest').textContent = r.destination;
+  document.getElementById('tripPrice').textContent = r.price.toLocaleString() + ' FCFA';
+
+  var phoneClean = d.phone.replace(/[^0-9+]/g,'');
+  document.getElementById('callDriverBtn').href = 'tel:'+phoneClean;
+  document.getElementById('whatsDriverBtn').href = 'https://wa.me/'+phoneClean.replace('+','')+'?text='+encodeURIComponent('Bonjour '+d.driver+', je suis votre client Thierry Transport pour la course vers '+r.destination);
+
+  document.getElementById('tripStatusBadge').textContent = 'EN ROUTE VERS VOUS';
+  var advBtn = document.getElementById('btnAdvance');
+  advBtn.textContent = "Le chauffeur est arrive";
+  advBtn.onclick = arrivedStep;
+  document.getElementById('btnCancelTrip').style.display = 'block';
+
+  showScreen('screen-ontrip');
+  toast('Chauffeur trouve !');
+}
+
+function arrivedStep(){
+  document.getElementById('tripStatusBadge').textContent = 'EN COURSE';
+  var advBtn = document.getElementById('btnAdvance');
+  advBtn.textContent = 'Terminer la course';
+  advBtn.onclick = finishTrip;
+  document.getElementById('btnCancelTrip').style.display = 'none';
+  toast('Bon voyage !');
+}
+
+function cancelTrip(){
+  if(!confirm('Voulez-vous vraiment annuler cette course ?')) return;
+  STATE.currentRide = null;
+  save('tt_currentRide', null);
+  goHome();
+  toast('Course annulee');
+}
+
+function finishTrip(){
+  var r = STATE.currentRide;
+  r.status = 'completed';
+  STATE.history.unshift(r);
+  save('tt_history', STATE.history);
+
+  for(var i=0;i<STATE.vehicles.length;i++){
+    if(STATE.vehicles[i].id === r.driver.id){
+      STATE.vehicles[i].rides = (STATE.vehicles[i].rides || 0) + 1;
+    }
+  }
+  save('tt_vehicles', STATE.vehicles);
+
+  document.getElementById('finalPrice').textContent = r.price.toLocaleString() + ' FCFA';
+  resetRatingStars();
+  showScreen('screen-rating');
+}
+
+// ---------- NOTATION ----------
+function resetRatingStars(){
+  STATE.ratingValue = 0;
+  var spans = document.querySelectorAll('#ratingStars span');
+  for(var i=0;i<spans.length;i++){
+    spans[i].textContent = '☆';
+    spans[i].onclick = (function(idx){ return function(){ setRating(idx); }; })(i+1);
+  }
+}
+function setRating(val){
+  STATE.ratingValue = val;
+  var spans = document.querySelectorAll('#ratingStars span');
+  for(var i=0;i<spans.length;i++){
+    spans[i].textContent = (i < val) ? '★' : '☆';
+  }
+}
+function submitRating(){
+  if(STATE.ratingValue === 0) STATE.ratingValue = 5;
+  var lastRide = STATE.history[0];
+  if(lastRide){ lastRide.userRating = STATE.ratingValue; lastRide.comment = document.getElementById('ratingComment').value; save('tt_history', STATE.history); }
+  STATE.currentRide = null;
+  save('tt_currentRide', null);
+  document.getElementById('ratingComment').value = '';
+  goHome();
+  renderRecent();
+  toast('Merci pour votre note !');
+}
+
+function starsHTML(rating){
+  rating = rating || 5;
+  var full = Math.round(rating);
+  var html = '';
+  for(var i=0;i<5;i++){ html += i < full ? '★' : '☆'; }
+  return html + ' <span style="color:#aaa;font-size:11px;">'+rating+'</span>';
+}
+
+// ---------- HISTORIQUE ----------
+function renderHistory(){
+  var list = document.getElementById('historyList');
+  if(STATE.history.length === 0){
+    list.innerHTML = '<div class="empty">Aucune course effectuee pour le moment.</div>';
+    return;
+  }
+  var html = '';
+  for(var i=0;i<STATE.history.length;i++){
+    var r = STATE.history[i];
+    var label = VEHICLE_LABELS[r.type];
+    var date = new Date(r.date);
+    var dateStr = date.toLocaleDateString('fr-FR') + ' a ' + date.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
+    html += '<div class="card">'+
+              '<div class="row-between"><b>'+label.icon+' '+label.name+'</b><span style="color:#FFD100;font-weight:800;">'+r.price.toLocaleString()+' FCFA</span></div>'+
+              '<div class="small" style="margin-top:6px;">'+escapeHtml(r.pickup)+' &rarr; '+escapeHtml(r.destination)+'</div>'+
+              '<div class="small" style="margin-top:4px;">'+escapeHtml(r.driver.driver)+' - '+escapeHtml(r.driver.plate)+'</div>'+
+              '<div class="small" style="margin-top:4px;">'+dateStr+'</div>'+
+            '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function resumeRideIfNeeded(){
+  if(STATE.currentRide && (STATE.currentRide.status === 'enroute')){
+    startTrip();
+  }
+}
+
+// ---------- PROFIL / MODE ----------
+function renderProfile(){
+  document.getElementById('totalRides').textContent = STATE.history.length;
+  document.getElementById('modeLabel').textContent = STATE.mode === 'fleet' ? 'Client' : 'Chauffeur / Flotte';
+  document.getElementById('profileName').textContent = STATE.mode === 'fleet' ? 'Thierry Transport - Admin Flotte' : 'Client Thierry Transport';
+}
+
+function toggleMode(){
+  STATE.mode = STATE.mode === 'fleet' ? 'client' : 'fleet';
+  save('tt_mode', STATE.mode);
+  renderNav();
+  if(STATE.mode === 'fleet'){
+    document.getElementById('headerSub').textContent = 'Espace proprietaire - Gestion de flotte';
+    showScreen('screen-fleet');
+    toast('Mode Flotte active');
+  } else {
+    document.getElementById('headerSub').textContent = "VTC et Livraison - Abidjan, Cote d'Ivoire";
+    showScreen('screen-home');
+    toast('Mode Client active');
+  }
+}
+
+function contactSupport(){
+  window.open('https://wa.me/2250700000000?text='+encodeURIComponent("Bonjour, j'ai besoin d'aide concernant Thierry Transport."), '_blank');
+}
+
+// ---------- FLOTTE ----------
+function fleetTab(tab){
+  document.getElementById('tabVehicles').classList.toggle('active', tab==='vehicles');
+  document.getElementById('tabOrders').classList.toggle('active', tab==='orders');
+  document.getElementById('tabStats').classList.toggle('active', tab==='stats');
+  document.getElementById('fleetVehicles').style.display = tab==='vehicles' ? 'block' : 'none';
+  document.getElementById('fleetOrders').style.display = tab==='orders' ? 'block' : 'none';
+  document.getElementById('fleetStats').style.display = tab==='stats' ? 'block' : 'none';
+  if(tab==='orders') renderOrders();
+  if(tab==='stats') { renderStats(); renderPriceSettings(); }
+}
+
+function renderVehicleList(){
+  var list = document.getElementById('vehicleList');
+  list.innerHTML = '';
+  if(STATE.vehicles.length === 0){
+    list.innerHTML = '<div class="empty">Aucun vehicule. Ajoutez votre premier vehicule !</div>';
+    return;
+  }
+  for(var i=0;i<STATE.vehicles.length;i++){
+    var v = STATE.vehicles[i];
+    var label = VEHICLE_LABELS[v.type];
+    var badgeClass = v.status === 'online' ? 'badge-on' : 'badge-off';
+    var badgeText = v.status === 'online' ? 'EN LIGNE' : 'HORS LIGNE';
+
+    var item = document.createElement('div');
+    item.className = 'veh-item' + (v.status==='offline' ? ' offline' : '');
+    item.innerHTML =
+      '<div style="font-size:30px;">'+label.icon+'</div>'+
+      '<div style="flex:1; min-width:140px;">'+
+        '<div style="font-weight:700;">'+escapeHtml(v.model)+'</div>'+
+        '<div class="small">'+escapeHtml(v.driver)+' - '+escapeHtml(v.plate)+'</div>'+
+        '<div class="small">'+starsHTML(v.rating)+' - '+(v.rides||0)+' courses</div>'+
+      '</div>'+
+      '<div style="text-align:right; width:100%;">'+
+        '<span class="badge '+badgeClass+'">'+badgeText+'</span>'+
+      '</div>';
+
+    var btnRow = document.createElement('div');
+    btnRow.style.width = '100%';
+
+    var toggleBtn = document.createElement('button');
+    toggleBtn.className = 'btn-sm btn-dark';
+    toggleBtn.textContent = v.status === 'online' ? 'Mettre hors ligne' : 'Mettre en ligne';
+    toggleBtn.addEventListener('click', (function(id){ return function(){ toggleVehicleStatus(id); }; })(v.id));
+
+    var editBtn = document.createElement('button');
+    editBtn.className = 'btn-sm btn-outline';
+    editBtn.textContent = 'Modifier';
+    editBtn.addEventListener('click', (function(id){ return function(){ editVehicle(id); }; })(v.id));
+
+    var delBtn = document.createElement('button');
+    delBtn.className = 'btn-sm btn-danger';
+    delBtn.textContent = 'Supprimer';
+    delBtn.addEventListener('click', (function(id){ return function(){ removeVehicle(id); }; })(v.id));
+
+    btnRow.appendChild(toggleBtn);
+    btnRow.appendChild(editBtn);
+    btnRow.appendChild(delBtn);
+    item.appendChild(btnRow);
+
+    list.appendChild(item);
+  }
+}
+
+function toggleVehicleStatus(id){
+  for(var i=0;i<STATE.vehicles.length;i++){
+    if(STATE.vehicles[i].id === id){
+      STATE.vehicles[i].status = STATE.vehicles[i].status === 'online' ? 'offline' : 'online';
+    }
+  }
+  save('tt_vehicles', STATE.vehicles);
+  renderVehicleList();
+  renderStats();
+}
+
+function openVehicleModal(){
+  document.getElementById('vehEditId').value = '';
+  document.getElementById('vehType').value = 'eco';
+  document.getElementById('vehModel').value = '';
+  document.getElementById('vehPlate').value = '';
+  document.getElementById('vehColor').value = '';
+  document.getElementById('vehDriver').value = '';
+  document.getElementById('vehPhone').value = '';
+  document.getElementById('vehStatus').value = 'online';
+  document.getElementById('vehicleModal').classList.add('active');
+}
+function closeVehicleModal(){
+  document.getElementById('vehicleModal').classList.remove('active');
+}
+
+function editVehicle(id){
+  var v = null;
+  for(var i=0;i<STATE.vehicles.length;i++){ if(STATE.vehicles[i].id === id) v = STATE.vehicles[i]; }
+  if(!v) return;
+  document.getElementById('vehEditId').value = v.id;
+  document.getElementById('vehType').value = v.type;
+  document.getElementById('vehModel').value = v.model;
+  document.getElementById('vehPlate').value = v.plate;
+  document.getElementById('vehColor').value = v.color;
+  document.getElementById('vehDriver').value = v.driver;
+  document.getElementById('vehPhone').value = v.phone;
+  document.getElementById('vehStatus').value = v.status;
+  document.getElementById('vehicleModal').classList.add('active');
+}
+
+function saveVehicle(){
+  var model = document.getElementById('vehModel').value.trim();
+  var plate = document.getElementById('vehPlate').value.trim();
+  var driver = document.getElementById('vehDriver').value.trim();
+  var phone = document.getElementById('vehPhone').value.trim();
+  if(!model || !plate || !driver || !phone){
+    toast('Veuillez remplir tous les champs obligatoires');
+    return;
+  }
+  var editId = document.getElementById('vehEditId').value;
+  var data = {
+    type: document.getElementById('vehType').value,
+    model: model,
+    plate: plate,
+    color: document.getElementById('vehColor').value.trim() || 'Non specifie',
+    driver: driver,
+    phone: phone,
+    status: document.getElementById('vehStatus').value
+  };
+
+  if(editId){
+    for(var i=0;i<STATE.vehicles.length;i++){
+      if(STATE.vehicles[i].id === parseInt(editId, 10)){
+        data.id = STATE.vehicles[i].id;
+        data.rating = STATE.vehicles[i].rating;
+        data.rides = STATE.vehicles[i].rides;
+        STATE.vehicles[i] = data;
+      }
+    }
+    toast('Vehicule modifie');
+  } else {
+    data.id = Date.now();
+    data.rating = 5.0;
+    data.rides = 0;
+    STATE.vehicles.push(data);
+    toast('Vehicule ajoute a votre flotte !');
+  }
+  save('tt_vehicles', STATE.vehicles);
+  closeVehicleModal();
+  renderVehicleList();
+  renderStats();
+}
+
+function removeVehicle(id){
+  if(!confirm('Supprimer ce vehicule de votre flotte ?')) return;
+  STATE.vehicles = STATE.vehicles.filter(function(v){ return v.id !== id; });
+  save('tt_vehicles', STATE.vehicles);
+  renderVehicleList();
+  renderStats();
+  toast('Vehicule supprime');
+}
+
+// ---------- DEMANDES ----------
+function renderOrders(){
+  var list = document.getElementById('ordersList');
+  if(STATE.history.length === 0){
+    list.innerHTML = '<div class="empty">Aucune demande de course pour le moment.</div>';
+    return;
+  }
+  var html = '';
+  for(var i=0;i<STATE.history.length;i++){
+    var r = STATE.history[i];
+    var label = VEHICLE_LABELS[r.type];
+    var date = new Date(r.date);
+    html += '<div class="card">'+
+              '<div class="row-between"><b>'+label.icon+' '+escapeHtml(r.driver.driver)+'</b><span style="color:#FFD100;font-weight:800;">'+r.price.toLocaleString()+' FCFA</span></div>'+
+              '<div class="small" style="margin-top:6px;">'+escapeHtml(r.pickup)+' &rarr; '+escapeHtml(r.destination)+'</div>'+
+              '<div class="small" style="margin-top:4px;">Vehicule: '+escapeHtml(r.driver.model)+' ('+escapeHtml(r.driver.plate)+')</div>'+
+              '<div class="small" style="margin-top:4px;">Paiement: '+paymentLabel(r.payment)+' - '+date.toLocaleDateString('fr-FR')+'</div>'+
+              (r.userRating ? '<div class="small" style="margin-top:4px;">Note client: '+starsHTML(r.userRating)+'</div>' : '')+
+            '</div>';
+  }
+  list.innerHTML = html;
+}
+function paymentLabel(p){
+  var map = {cash:'Especes', om:'Orange Money', momo:'MTN MoMo', wave:'Wave', moov:'Moov Money'};
+  return map[p] || p;
+}
+
+// ---------- STATISTIQUES ----------
+function renderStats(){
+  var active = STATE.vehicles.filter(function(v){ return v.status==='online'; }).length;
+  var offline = STATE.vehicles.length - active;
+  var totalRides = STATE.history.length;
+  var revenue = 0;
+  for(var i=0;i<STATE.history.length;i++){ revenue += STATE.history[i].price; }
+
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statOffline').textContent = offline;
+  document.getElementById('statRides').textContent = totalRides;
+  document.getElementById('statRevenue').textContent = revenue.toLocaleString() + ' FCFA';
+}
+
+function renderPriceSettings(){
+  var container = document.getElementById('priceSettings');
+  container.innerHTML = '';
+  var types = ['moto','eco','confort','van','livraison'];
+  for(var i=0;i<types.length;i++){
+    var t = types[i];
+    var label = VEHICLE_LABELS[t];
+    var wrap = document.createElement('div');
+    wrap.style.marginBottom = '8px';
+    wrap.innerHTML = '<label>'+label.icon+' '+label.name+' (FCFA / km)</label>';
+    var input = document.createElement('input');
+    input.className = 'input';
+    input.type = 'number';
+    input.id = 'price-'+t;
+    input.value = STATE.prices[t];
+    input.style.marginBottom = '0';
+    wrap.appendChild(input);
+    container.appendChild(wrap);
+  }
+}
+
+function savePrices(){
+  var types = ['moto','eco','confort','van','livraison'];
+  for(var i=0;i<types.length;i++){
+    var t = types[i];
+    var val = parseInt(document.getElementById('price-'+t).value, 10);
+    if(!isNaN(val) && val > 0) STATE.prices[t] = val;
+  }
+  save('tt_prices', STATE.prices);
+  toast('Tarifs mis a jour');
+}
+
+// ---------- RECENTS ----------
+function renderRecent(){
+  var el = document.getElementById('recentList');
+  if(STATE.history.length === 0){ el.innerHTML = 'Aucun trajet recent.'; return; }
+  var r = STATE.history[0];
+  el.innerHTML = '';
+  var row = document.createElement('div');
+  row.className = 'row-between';
+  row.style.cursor = 'pointer';
+  row.innerHTML = '<span>'+escapeHtml(r.pickup)+' &rarr; '+escapeHtml(r.destination)+'</span><span style="color:#FFD100;">Refaire &rarr;</span>';
+  row.addEventListener('click', quickRebook);
+  el.appendChild(row);
+}
+function quickRebook(){
+  var r = STATE.history[0];
+  document.getElementById('pickup').value = r.pickup;
+  document.getElementById('destination').value = r.destination;
+  searchRides();
+}
+
+// ============================================================
+// ASSISTANT IA "AYA"
+// ============================================================
+var AYA_GREETING = "Bonjour ! Je suis Aya, votre assistante Thierry Transport. Je peux vous aider a estimer le prix d'une course, trouver un chauffeur disponible, expliquer les modes de paiement ou repondre a vos questions. Comment puis-je vous aider ?";
+
+var AYA_SUGGESTIONS = [
+  "Combien coute une course ?",
+  "Comment payer avec Orange Money ?",
+  "Y a-t-il des motos disponibles ?",
+  "Comment ajouter un vehicule ?"
+];
+
+function openChat(){
+  document.getElementById('chatOverlay').classList.add('active');
+  var msgs = document.getElementById('chatMsgs');
+  if(msgs.children.length === 0){
+    addMsg('bot', AYA_GREETING);
+    renderSuggestions();
+  }
+}
+function closeChat(){
+  document.getElementById('chatOverlay').classList.remove('active');
+}
+
+function addMsg(who, text){
+  var msgs = document.getElementById('chatMsgs');
+  var div = document.createElement('div');
+  div.className = 'msg ' + who;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function renderSuggestions(){
+  var row = document.getElementById('chatSuggestions');
+  row.innerHTML = '';
+  for(var i=0;i<AYA_SUGGESTIONS.length;i++){
+    var chip = document.createElement('div');
+    chip.className = 'suggest-chip';
+    chip.textContent = AYA_SUGGESTIONS[i];
+    chip.addEventListener('click', (function(text){
+      return function(){
+        document.getElementById('chatInput').value = text;
+        sendChatMessage();
+      };
+    })(AYA_SUGGESTIONS[i]));
+    row.appendChild(chip);
+  }
+}
+
+function sendChatMessage(){
+  var input = document.getElementById('chatInput');
+  var text = input.value.trim();
+  if(!text) return;
+  addMsg('user', text);
+  input.value = '';
+  document.getElementById('chatTyping').style.display = 'block';
+
+  setTimeout(function(){
+    var reply = ayaReply(text);
+    document.getElementById('chatTyping').style.display = 'none';
+    addMsg('bot', reply);
+  }, 600 + Math.random()*500);
+}
+
+// Moteur de reponses local (regles) - pas besoin d'API externe
+function ayaReply(msg){
+  var m = msg.toLowerCase();
+
+  // Prix / tarifs
+  if(m.indexOf('prix') !== -1 || m.indexOf('cout') !== -1 || m.indexOf('coute') !== -1 || m.indexOf('combien') !== -1 || m.indexOf('tarif') !== -1){
+    return "Nos tarifs de base sont: Moto "+STATE.prices.moto+" FCFA/km, Eco "+STATE.prices.eco+" FCFA/km, Confort "+STATE.prices.confort+" FCFA/km, Van "+STATE.prices.van+" FCFA/km, Livraison "+STATE.prices.livraison+" FCFA/km (+ frais de prise en charge ~200 FCFA). Utilisez le code THIERRY15 pour -15% sur votre premiere course !";
+  }
+
+  // Paiement
+  if(m.indexOf('orange money') !== -1 || m.indexOf('om') !== -1){
+    return "Pour payer avec Orange Money: choisissez 'Orange Money' comme mode de paiement avant de confirmer votre course. Le chauffeur vous donnera un numero Orange Money a la fin de la course, ou le paiement peut etre regle directement en especes selon votre preference.";
+  }
+  if(m.indexOf('wave') !== -1){
+    return "Wave est disponible comme mode de paiement ! Selectionnez-le dans l'ecran de choix de course. Vous payez directement le chauffeur via Wave a la fin du trajet.";
+  }
+  if(m.indexOf('momo') !== -1 || m.indexOf('mtn') !== -1){
+    return "MTN Mobile Money (MoMo) est accepte. Choisissez-le comme mode de paiement, le chauffeur recevra votre paiement a la fin de la course.";
+  }
+  if(m.indexOf('moov') !== -1){
+    return "Moov Money est disponible comme mode de paiement chez Thierry Transport.";
+  }
+  if(m.indexOf('paiement') !== -1 || m.indexOf('payer') !== -1){
+    return "Vous pouvez payer en Especes, Orange Money, MTN Mobile Money, Wave ou Moov Money. Le choix se fait sur l'ecran de confirmation de course.";
+  }
+
+  // Disponibilite vehicules
+  if(m.indexOf('moto') !== -1 && (m.indexOf('disponib') !== -1 || m.indexOf('y a') !== -1 || m.indexOf('dispo') !== -1)){
+    var motos = STATE.vehicles.filter(function(v){ return v.type==='moto' && v.status==='online'; });
+    return motos.length > 0 ? motos.length+" moto(s) sont actuellement en ligne et disponibles pour une course." : "Aucune moto n'est en ligne pour le moment. Reessayez dans quelques minutes ou choisissez une autre categorie.";
+  }
+  if(m.indexOf('disponib') !== -1 || m.indexOf('voiture') !== -1 || m.indexOf('vehicule') !== -1){
+    var online = STATE.vehicles.filter(function(v){ return v.status==='online'; });
+    if(online.length === 0) return "Aucun vehicule n'est en ligne actuellement. Merci de reessayer plus tard.";
+    var byType = {};
+    for(var i=0;i<online.length;i++){ byType[online[i].type] = (byType[online[i].type]||0)+1; }
+    var parts = [];
+    for(var k in byType){ parts.push(byType[k]+' '+(VEHICLE_LABELS[k]?VEHICLE_LABELS[k].name:k)); }
+    return "Actuellement disponibles: " + parts.join(', ') + ".";
+  }
+
+  // Gestion flotte / ajouter vehicule
+  if(m.indexOf('ajouter') !== -1 && (m.indexOf('vehicule') !== -1 || m.indexOf('voiture') !== -1 || m.indexOf('moto') !== -1)){
+    return "Pour ajouter un vehicule a votre flotte: allez dans Profil > 'Passer en mode Chauffeur/Flotte', puis dans l'onglet 'Ma flotte', cliquez sur '+ Ajouter un vehicule'. Remplissez le type, le modele, la plaque, le chauffeur et son numero WhatsApp, puis Enregistrer.";
+  }
+  if(m.indexOf('retirer') !== -1 || m.indexOf('supprimer') !== -1 || (m.indexOf('enlever') !== -1)){
+    return "Pour retirer un vehicule: dans l'onglet 'Ma flotte' (mode Flotte), trouvez le vehicule et cliquez sur 'Supprimer'. Vous pouvez aussi le mettre simplement 'Hors ligne' s'il s'agit d'une pause temporaire.";
+  }
+  if(m.indexOf('flotte') !== -1){
+    return "La gestion de flotte vous permet d'ajouter, modifier, mettre en ligne/hors ligne et supprimer vos vehicules, de consulter vos statistiques et de definir vos propres tarifs par km. Activez-la depuis Profil > Passer en mode Chauffeur/Flotte.";
+  }
+
+  // Course / commande
+  if(m.indexOf('commander') !== -1 || m.indexOf('reserver') !== -1 || m.indexOf('course') !== -1){
+    return "Pour commander une course: entrez votre destination sur l'ecran d'accueil, appuyez sur 'Rechercher une course', choisissez le type de vehicule (Moto, Eco, Confort, Van, Livraison) et confirmez. Un chauffeur sera assigne automatiquement.";
+  }
+
+  // Annulation
+  if(m.indexOf('annul') !== -1){
+    return "Vous pouvez annuler une course en cours via le bouton 'Annuler la course' ou 'Annuler la demande'. Si le chauffeur est deja en route, des frais d'annulation peuvent s'appliquer selon notre politique.";
+  }
+
+  // Securite
+  if(m.indexOf('securit') !== -1 || m.indexOf('safe') !== -1){
+    return "Votre securite est notre priorite: tous nos chauffeurs sont identifies avec plaque et photo, vous pouvez partager votre course par WhatsApp et noter chaque trajet. En cas de probleme, contactez le support via Profil > Contacter le support.";
+  }
+
+  // Contact / support
+  if(m.indexOf('support') !== -1 || m.indexOf('aide') !== -1 || m.indexOf('contact') !== -1 || m.indexOf('probleme') !== -1){
+    return "Pour toute assistance, contactez notre support WhatsApp depuis Profil > 'Contacter le support'. Notre equipe vous repond rapidement.";
+  }
+
+  // Salutations
+  if(m.indexOf('bonjour') !== -1 || m.indexOf('salut') !== -1 || m.indexOf('bonsoir') !== -1 || m.indexOf('hello') !== -1){
+    return "Bonjour ! Ravie de vous aider. Voulez-vous estimer le prix d'une course, connaitre les vehicules disponibles ou en savoir plus sur les modes de paiement ?";
+  }
+
+  // Merci
+  if(m.indexOf('merci') !== -1){
+    return "Avec plaisir ! N'hesitez pas si vous avez d'autres questions. Bon voyage avec Thierry Transport !";
+  }
+
+  // Reponse par defaut
+  return "Je n'ai pas tout a fait compris, mais je peux vous renseigner sur: les tarifs et prix, les modes de paiement (Orange Money, Wave, MoMo, Moov), la disponibilite des vehicules, comment commander une course, ou comment gerer votre flotte de vehicules. N'hesitez pas a reformuler !";
+}
+
+// ============================================================
+// EVENEMENTS (attaches au DOMContentLoaded pour fiabilite)
+// ============================================================
+function bindEvents(){
+  document.getElementById('btnSearchRide').addEventListener('click', searchRides);
+  document.getElementById('btnConfirmRide').addEventListener('click', confirmRide);
+  document.getElementById('btnCancelRideScreen').addEventListener('click', goHome);
+  document.getElementById('btnCancelSearch').addEventListener('click', cancelSearch);
+  document.getElementById('btnCancelTrip').addEventListener('click', cancelTrip);
+  document.getElementById('btnAdvance').addEventListener('click', arrivedStep);
+  document.getElementById('btnSubmitRating').addEventListener('click', submitRating);
+  document.getElementById('btnToggleMode').addEventListener('click', toggleMode);
+  document.getElementById('btnSupport').addEventListener('click', contactSupport);
+
+  document.getElementById('tabVehicles').addEventListener('click', function(){ fleetTab('vehicles'); });
+  document.getElementById('tabOrders').addEventListener('click', function(){ fleetTab('orders'); });
+  document.getElementById('tabStats').addEventListener('click', function(){ fleetTab('stats'); });
+  document.getElementById('btnAddVehicle').addEventListener('click', openVehicleModal);
+  document.getElementById('btnSaveVehicle').addEventListener('click', saveVehicle);
+  document.getElementById('btnCloseVehicleModal').addEventListener('click', closeVehicleModal);
+  document.getElementById('btnSavePrices').addEventListener('click', savePrices);
+
+  document.getElementById('chatFab').addEventListener('click', openChat);
+  document.getElementById('chatClose').addEventListener('click', closeChat);
+  document.getElementById('chatSend').addEventListener('click', sendChatMessage);
+  document.getElementById('chatInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ sendChatMessage(); }
+  });
+}
+
+// ---------- INIT ----------
+function init(){
+  bindEvents();
+  renderNav();
+  if(STATE.mode === 'fleet'){
+    document.getElementById('headerSub').textContent = 'Espace proprietaire - Gestion de flotte';
+    showScreen('screen-fleet');
+  }
+  renderRecent();
+  resumeRideIfNeeded();
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+})();
+</script>
+</body>
+</html>
